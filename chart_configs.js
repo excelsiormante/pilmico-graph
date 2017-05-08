@@ -1,19 +1,36 @@
-$(document).ready(function() {
-	var manufacture_url = "https://rcdelacruz-test.apigee.net/v1/manufacturing-services/"
-	var business_url = "https://rcdelacruz-test.apigee.net/v1/business-layer-services/";
+var manufacture_url = "https://rcdelacruz-test.apigee.net/v1/manufacturing-services/"
+var business_url = "https://rcdelacruz-test.apigee.net/v1/business-layer-services/";
 
+
+$(document).ready(function() {
 	//MANUFACTURE GRAPH
     loadManufactureData(manufacture_url)
-    
-
     //BUSINESS GRAPH
-    sendRequest(business_url+"data-chunk/116000000001", "GET", function(result){
-    	var processedData = processData(result);
-    	buildBusinessChart(processedData);
+    sendRequest(business_url+"export-task/116000000001", "POST", function(task){
+ 
+ 		sendRequest(business_url+"export-task/116000000001/status/"+task.taskId, "GET", function(state){
+ 			if(state.taskState == "COMPLETE"){
+ 				sendRequest(business_url+"data-chunk/116000000001", "GET", function(result){
+ 					var processedData = processData(result);
+    				buildBusinessChart(processedData);
+    			});
+ 			}
+ 		});
     });
 
 
 });	
+
+$( ".refresh-manufacture" ).click(function() {
+  loadManufactureData(manufacture_url)
+});
+
+$( ".refresh-business" ).click(function() {
+  sendRequest(business_url+"data-chunk/116000000001", "GET", function(result){
+    	var processedData = processData(result);
+    	buildBusinessChart(processedData);
+   });
+});
 
 function loadManufactureData(url){;
 	sendRequest(url+'niats', "GET", function(result){buildManufactureChart(result.testNiat, "niats");});
@@ -57,23 +74,74 @@ function buildManufactureChart(data, type){
 
 
 function buildBusinessChart(_data){
-	var ctx = $("#myChart");
+	var bar_ctx = $("#barChart");
+	var line_ctx = $("#lineChart");
+
 
 	var data = {
 	    labels: _data.labels,
 	    datasets: _data.datasets
 	};
 
-	var myBarChart = new Chart(ctx, {
+	var BarChart = new Chart(bar_ctx, {
 	    type: 'bar',
 	    data: data,
 	    options: {
 	        barValueSpacing: 20,
+	        title: {
+	            display: true,
+	            text: 'Business Data'
+	        },
 	        scales: {
 	            yAxes: [{
 	                ticks: {
-	                    min: 0,
+	                   beginAtZero: true,
+			            callback: function(value, index, values) {
+			              if(parseInt(value) >= 1000){
+			                return 'P' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			              } else {
+			                return 'P' + value;
+			              }
+			            }
 	                }
+	            }],
+	            xAxes: [{
+	            	scaleLabel: {
+				       display: true,
+				       labelString: 'Date'
+				     }
+	            }]
+	        }
+	    }
+	});
+
+	var LineChart = new Chart(line_ctx, {
+	    type: 'line',
+	    data: data,
+	    options: {
+	        barValueSpacing: 20,
+	        title: {
+	            display: true,
+	            text: 'Business Data'
+	        },
+	        scales: {
+	            yAxes: [{
+	            	ticks: {
+	                   beginAtZero: true,
+			            callback: function(value, index, values) {
+			              if(parseInt(value) >= 1000){
+			                return 'P' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+			              } else {
+			                return 'P' + value;
+			              }
+			            }
+	                }
+	            }],
+	            xAxes: [{
+	            	scaleLabel: {
+				       display: true,
+				       labelString: 'Date'
+				     }
 	            }]
 	        }
 	    }
