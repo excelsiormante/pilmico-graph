@@ -77,11 +77,11 @@ function buildBusinessChart(_data){
 	var bar_ctx = $("#barChart");
 	var line_ctx = $("#lineChart");
 
-
 	var data = {
 	    labels: _data.labels,
 	    datasets: _data.datasets
 	};
+
 
 	var BarChart = new Chart(bar_ctx, {
 	    type: 'bar',
@@ -180,10 +180,13 @@ function processData(allText){
 			}
 			values.push(index[1]);
 		}
+		var randomColor = getRandomColor();
 		var dataset = {
 			label : machine,
-			backgroundColor: getRandomColor(),
-			data: values
+			backgroundColor: randomColor,
+			borderColor: randomColor,
+			data: values,
+			fill:false
 		};
 		datasets.push(dataset);
 	}
